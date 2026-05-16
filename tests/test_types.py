@@ -1,5 +1,5 @@
 # rag-core/tests/test_types.py
-import json
+import pytest
 from dataclasses import asdict
 from rag_core.types import (
     MetadataFilter, RetrievalQuery, Chunk, RetrievedChunk,
@@ -82,3 +82,24 @@ def test_metadata_serialization_on_message():
 def test_namespace_explicit_override():
     c = Chunk(id="a", content="x", metadata={}, source_id="s", namespace="tenant_a")
     assert c.namespace == "tenant_a"
+
+
+def test_metadata_filter_compound_or():
+    f = MetadataFilter(or_=[
+        MetadataFilter(field="dept", op="eq", value="HR"),
+        MetadataFilter(field="dept", op="eq", value="Engineering"),
+    ])
+    d = asdict(f)
+    assert d["field"] is None
+    assert len(d["or_"]) == 2
+
+
+def test_ingestion_result_updated():
+    r = IngestionResult(source_id="ns:abc", chunk_count=8, status="updated")
+    assert r.status == "updated"
+    assert r.chunk_count == 8
+
+
+def test_retrieval_query_top_k_validation():
+    with pytest.raises(ValueError):
+        RetrievalQuery(text="test", top_k=0)

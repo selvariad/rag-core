@@ -14,6 +14,18 @@ class MetadataFilter:
     and_: list["MetadataFilter"] | None = None
     or_: list["MetadataFilter"] | None = None
 
+    def __post_init__(self):
+        is_simple = self.field is not None
+        is_compound = self.and_ is not None or self.or_ is not None
+        if is_simple and is_compound:
+            raise ValueError(
+                "Cannot set both simple (field/op/value) and compound (and_/or_) filter conditions"
+            )
+        if not is_simple and not is_compound:
+            raise ValueError(
+                "Filter must have either field/op/value or and_/or_"
+            )
+
 
 @dataclass
 class RetrievalQuery:
@@ -22,6 +34,10 @@ class RetrievalQuery:
     namespace: str = DEFAULT_NAMESPACE
     filters: MetadataFilter | None = None
     top_k: int = 10
+
+    def __post_init__(self):
+        if self.top_k < 1:
+            raise ValueError(f"top_k must be >= 1, got {self.top_k}")
 
 
 @dataclass(kw_only=True)
@@ -33,7 +49,7 @@ class Chunk:
     namespace: str = DEFAULT_NAMESPACE
 
 
-@dataclass
+@dataclass(kw_only=True)
 class RetrievedChunk(Chunk):
     score: float
     rank: int
