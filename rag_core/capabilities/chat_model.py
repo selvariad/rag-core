@@ -33,18 +33,14 @@ class LangChainChatModel:
             return ChatAnthropic(model=self._model_name, **self._kwargs)
         elif self._provider == "deepseek":
             from langchain_openai import ChatOpenAI
-            return ChatOpenAI(
-                model=self._model_name,
-                base_url="https://api.deepseek.com/v1",
-                **self._kwargs,
-            )
+            kwargs = {k: v for k, v in self._kwargs.items() if v is not None}
+            kwargs.setdefault("base_url", "https://api.deepseek.com/v1")
+            return ChatOpenAI(model=self._model_name, **kwargs)
         elif self._provider == "zhipu":
             from langchain_openai import ChatOpenAI
-            return ChatOpenAI(
-                model=self._model_name,
-                base_url="https://open.bigmodel.cn/api/paas/v4",
-                **self._kwargs,
-            )
+            kwargs = {k: v for k, v in self._kwargs.items() if v is not None}
+            kwargs.setdefault("base_url", "https://open.bigmodel.cn/api/paas/v4")
+            return ChatOpenAI(model=self._model_name, **kwargs)
         else:
             raise ValueError(f"Unknown provider: {self._provider}")
 
