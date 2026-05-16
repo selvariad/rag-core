@@ -1,6 +1,7 @@
 # rag-core/rag_core/capabilities/retriever.py
 from typing import Protocol, runtime_checkable
 from rag_core.types import RetrievalQuery, RetrievedChunk
+from rag_core.capabilities.embedder import Embedder
 
 __all__ = ["Retriever", "HybridRetriever"]
 
@@ -15,6 +16,7 @@ class Retriever(Protocol):
 class HybridRetriever:
     def __init__(
         self,
+        embedder: Embedder,
         persist_dir: str = "./chroma_db",
         collection_name: str = "documents",
         use_reranker: bool = False,
@@ -23,6 +25,7 @@ class HybridRetriever:
         import chromadb
         from chromadb.config import Settings
 
+        self._embedder = embedder
         self._client = chromadb.PersistentClient(
             path=persist_dir,
             settings=Settings(anonymized_telemetry=False),
@@ -42,14 +45,15 @@ class HybridRetriever:
         if query.filters:
             where_clause = self._build_where(query.filters)
 
-        # Always filter by namespace; combine with $and if other filters exist
         if where_clause:
             where_clause = {"$and": [where_clause, {"namespace": query.namespace}]}
         else:
             where_clause = {"namespace": query.namespace}
 
+        query_vector = await self._embedder.embed_query(query.text)
+
         results = self._collection.query(
-            query_texts=[query.text],
+            query_embeddings=[query_vector],
             n_results=query.top_k * 2,  # oversample for rerank
             where=where_clause,
             include=["documents", "metadatas", "distances"],
