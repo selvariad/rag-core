@@ -11,6 +11,7 @@ from rag_core.types import (
     DEFAULT_NAMESPACE,
 )
 from rag_core.capabilities.embedder import Embedder, LocalEmbedder, OpenAIEmbedder
+from rag_core.capabilities.chat_model import ChatModel, LangChainChatModel
 
 __all__ = [
     "Chunk",
@@ -26,4 +27,6 @@ __all__ = [
     "Embedder",
     "LocalEmbedder",
     "OpenAIEmbedder",
+    "ChatModel",
+    "LangChainChatModel",
 ]
