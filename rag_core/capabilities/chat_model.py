@@ -17,7 +17,12 @@ class LangChainChatModel:
         self._provider = provider
         self._model_name = model
         self._kwargs = kwargs
-        self._llm = self._build_llm()
+        self._llm = None
+
+    def _get_llm(self):
+        if self._llm is None:
+            self._llm = self._build_llm()
+        return self._llm
 
     def _build_llm(self):
         if self._provider == "openai":
@@ -50,7 +55,7 @@ class LangChainChatModel:
             kwargs["tools"] = [{"type": "function", "function": {
                 "name": t.name, "description": t.description, "parameters": t.parameters
             }} for t in tools]
-        result = await self._llm.ainvoke(lc_messages, **kwargs)
+        result = await self._get_llm().ainvoke(lc_messages, **kwargs)
         tool_calls = None
         if hasattr(result, "tool_calls") and result.tool_calls:
             tool_calls = [
@@ -65,7 +70,7 @@ class LangChainChatModel:
 
     async def stream(self, messages: list[Message]) -> AsyncIterator[str]:
         lc_messages = self._to_langchain(messages)
-        async for chunk in self._llm.astream(lc_messages):
+        async for chunk in self._get_llm().astream(lc_messages):
             if chunk.content and isinstance(chunk.content, str):
                 yield chunk.content
 

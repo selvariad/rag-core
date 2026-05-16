@@ -15,7 +15,11 @@ class Indexer(Protocol):
 class ChromaIndexer:
     def __init__(self, persist_dir: str = "./chroma_db", collection_name: str = "documents"):
         import chromadb
-        self._client = chromadb.PersistentClient(path=persist_dir)
+        from chromadb.config import Settings
+        self._client = chromadb.PersistentClient(
+            path=persist_dir,
+            settings=Settings(anonymized_telemetry=False),
+        )
         self._collection = self._client.get_or_create_collection(name=collection_name)
 
     async def index(self, chunks: list[Chunk], vectors: list[list[float]]) -> None:
