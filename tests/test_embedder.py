@@ -1,6 +1,6 @@
 # rag-core/tests/test_embedder.py
 import pytest
-from rag_core.capabilities.embedder import Embedder, LocalEmbedder
+from rag_core.capabilities.embedder import Embedder, LocalEmbedder, OpenAIEmbedder
 
 
 class FakeEmbedder:
@@ -51,3 +51,23 @@ async def test_local_embedder_embed_query():
     e = LocalEmbedder(model_name="BAAI/bge-small-en")
     result = await e.embed_query("test query")
     assert len(result) == 384
+
+
+def test_openai_embedder_satisfies_protocol():
+    e = OpenAIEmbedder()
+    assert isinstance(e, Embedder)
+
+
+@pytest.mark.asyncio
+async def test_local_embedder_empty_list():
+    e = LocalEmbedder(model_name="BAAI/bge-small-en")
+    result = await e.embed([])
+    assert result == []
+
+
+@pytest.mark.asyncio
+async def test_local_embedder_consistency():
+    e = LocalEmbedder(model_name="BAAI/bge-small-en")
+    batch = await e.embed(["test"])
+    single = await e.embed_query("test")
+    assert len(batch[0]) == len(single)

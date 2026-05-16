@@ -10,6 +10,7 @@ from rag_core.types import (
     Message,
     DEFAULT_NAMESPACE,
 )
+from rag_core.capabilities.embedder import Embedder, LocalEmbedder, OpenAIEmbedder
 
 __all__ = [
     "Chunk",
@@ -22,4 +23,7 @@ __all__ = [
     "ToolCall",
     "Message",
     "DEFAULT_NAMESPACE",
+    "Embedder",
+    "LocalEmbedder",
+    "OpenAIEmbedder",
 ]
