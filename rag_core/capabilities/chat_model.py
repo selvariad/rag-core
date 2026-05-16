@@ -1,6 +1,6 @@
 # rag-core/rag_core/capabilities/chat_model.py
 from typing import Protocol, runtime_checkable, AsyncIterator
-from rag_core.types import Message, ToolDef
+from rag_core.types import Message, ToolDef, ToolCall
 
 __all__ = ["ChatModel", "LangChainChatModel"]
 
