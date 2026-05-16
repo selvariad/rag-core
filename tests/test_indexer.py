@@ -21,6 +21,10 @@ class FakeIndexer:
     async def source_exists(self, source_id: str, namespace: str = "default") -> bool:
         return source_id in self._chunks
 
+    async def list_sources(self, namespace: str = "default") -> list[dict]:
+        return [{"source_id": sid, "filename": sid, "file_type": "", "chunk_count": len(chunks)}
+                for sid, chunks in self._chunks.items()]
+
 
 def test_fake_indexer_satisfies_protocol():
     idx = FakeIndexer()

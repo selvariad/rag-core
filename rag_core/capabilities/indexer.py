@@ -10,6 +10,7 @@ class Indexer(Protocol):
     async def index(self, chunks: list[Chunk], vectors: list[list[float]]) -> None: ...
     async def delete(self, source_id: str, namespace: str = DEFAULT_NAMESPACE) -> None: ...
     async def source_exists(self, source_id: str, namespace: str = DEFAULT_NAMESPACE) -> bool: ...
+    async def list_sources(self, namespace: str = DEFAULT_NAMESPACE) -> list[dict]: ...
 
 
 class ChromaIndexer:
@@ -46,3 +47,26 @@ class ChromaIndexer:
             limit=1,
         )
         return len(results["ids"]) > 0
+
+    async def list_sources(self, namespace: str = DEFAULT_NAMESPACE) -> list[dict]:
+        results = self._collection.get(
+            where={"namespace": namespace},
+            include=["metadatas"],
+        )
+        seen: dict[str, dict] = {}
+        if results["ids"]:
+            for i, sid in enumerate(results["ids"]):
+                source_id = results["metadatas"][i].get("source_id", "") if results["metadatas"] else ""
+                if source_id and source_id not in seen:
+                    meta = results["metadatas"][i] or {}
+                    filename = meta.get("filename", source_id)
+                    file_type = meta.get("file_type", "")
+                    chunk_count = sum(1 for j in range(len(results["ids"]))
+                                     if results["metadatas"][j].get("source_id") == source_id)
+                    seen[source_id] = {
+                        "source_id": source_id,
+                        "filename": filename,
+                        "file_type": file_type,
+                        "chunk_count": chunk_count,
+                    }
+        return list(seen.values())
