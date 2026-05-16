@@ -12,6 +12,7 @@ from rag_core.types import (
 )
 from rag_core.capabilities.embedder import Embedder, LocalEmbedder, OpenAIEmbedder
 from rag_core.capabilities.chat_model import ChatModel, LangChainChatModel
+from rag_core.capabilities.indexer import Indexer, ChromaIndexer
 
 __all__ = [
     "Chunk",
@@ -29,4 +30,6 @@ __all__ = [
     "OpenAIEmbedder",
     "ChatModel",
     "LangChainChatModel",
+    "Indexer",
+    "ChromaIndexer",
 ]
