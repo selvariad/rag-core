@@ -35,14 +35,14 @@ class ChromaIndexer:
 
     async def delete(self, source_id: str, namespace: str = DEFAULT_NAMESPACE) -> None:
         results = self._collection.get(
-            where={"source_id": source_id, "namespace": namespace},
+            where={"$and": [{"source_id": source_id}, {"namespace": namespace}]},
         )
         if results["ids"]:
             self._collection.delete(ids=results["ids"])
 
     async def source_exists(self, source_id: str, namespace: str = DEFAULT_NAMESPACE) -> bool:
         results = self._collection.get(
-            where={"source_id": source_id, "namespace": namespace},
+            where={"$and": [{"source_id": source_id}, {"namespace": namespace}]},
             limit=1,
         )
         return len(results["ids"]) > 0

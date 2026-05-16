@@ -41,7 +41,12 @@ class HybridRetriever:
         where_clause = {}
         if query.filters:
             where_clause = self._build_where(query.filters)
-        where_clause["namespace"] = query.namespace
+
+        # Always filter by namespace; combine with $and if other filters exist
+        if where_clause:
+            where_clause = {"$and": [where_clause, {"namespace": query.namespace}]}
+        else:
+            where_clause = {"namespace": query.namespace}
 
         results = self._collection.query(
             query_texts=[query.text],
