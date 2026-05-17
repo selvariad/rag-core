@@ -96,6 +96,9 @@ class HybridRetriever:
             except ImportError:
                 pass
 
+        # Re-sort by merged score (vector + BM25)
+        chunks.sort(key=lambda c: c.score, reverse=True)
+
         if self._reranker and len(chunks) > query.top_k:
             pairs = [[query.text, c.content] for c in chunks]
             scores = self._reranker.predict(pairs)
