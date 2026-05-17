@@ -21,6 +21,7 @@ class HybridRetriever:
         collection_name: str = "documents",
         use_reranker: bool = False,
         reranker_model: str = "BAAI/bge-reranker-v2-m3",
+        bm25_weight: float = 0.3,
     ):
         import chromadb
         from chromadb.config import Settings
@@ -32,6 +33,7 @@ class HybridRetriever:
         )
         self._collection = self._client.get_or_create_collection(name=collection_name)
         self._use_reranker = use_reranker
+        self._bm25_weight = bm25_weight
         self._reranker = None
         if use_reranker:
             try:
@@ -41,6 +43,8 @@ class HybridRetriever:
                 pass
 
     async def retrieve(self, query: RetrievalQuery) -> list[RetrievedChunk]:
+        import asyncio
+
         where_clause = {}
         if query.filters:
             where_clause = self._build_where(query.filters)
@@ -52,7 +56,8 @@ class HybridRetriever:
 
         query_vector = await self._embedder.embed_query(query.text)
 
-        results = self._collection.query(
+        results = await asyncio.to_thread(
+            self._collection.query,
             query_embeddings=[query_vector],
             n_results=query.top_k * 2,  # oversample for rerank
             where=where_clause,
@@ -74,6 +79,22 @@ class HybridRetriever:
                     score=1.0 - results["distances"][0][i],
                     rank=0,
                 ))
+
+        # BM25 keyword scoring (hybrid: vector + BM25)
+        if chunks and self._bm25_weight > 0:
+            try:
+                from rank_bm25 import BM25Okapi
+                docs = [c.content.split() for c in chunks]
+                query_tokens = query.text.split()
+                bm25 = BM25Okapi(docs)
+                bm25_scores = bm25.get_scores(query_tokens)
+                # Normalize BM25 scores to [0, 1]
+                bm25_max = max(bm25_scores) if max(bm25_scores) > 0 else 1.0
+                for c, bs in zip(chunks, bm25_scores):
+                    norm_bm25 = bs / bm25_max
+                    c.score = (1.0 - self._bm25_weight) * c.score + self._bm25_weight * norm_bm25
+            except ImportError:
+                pass
 
         if self._reranker and len(chunks) > query.top_k:
             pairs = [[query.text, c.content] for c in chunks]

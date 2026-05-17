@@ -26,7 +26,9 @@ class ChromaIndexer:
     async def index(self, chunks: list[Chunk], vectors: list[list[float]]) -> None:
         if not chunks:
             return
-        self._collection.add(
+        import asyncio
+        await asyncio.to_thread(
+            self._collection.add,
             ids=[c.id for c in chunks],
             documents=[c.content for c in chunks],
             metadatas=[{**c.metadata, "source_id": c.source_id, "namespace": c.namespace}
@@ -35,21 +37,27 @@ class ChromaIndexer:
         )
 
     async def delete(self, source_id: str, namespace: str = DEFAULT_NAMESPACE) -> None:
-        results = self._collection.get(
+        import asyncio
+        results = await asyncio.to_thread(
+            self._collection.get,
             where={"$and": [{"source_id": source_id}, {"namespace": namespace}]},
         )
         if results["ids"]:
-            self._collection.delete(ids=results["ids"])
+            await asyncio.to_thread(self._collection.delete, ids=results["ids"])
 
     async def source_exists(self, source_id: str, namespace: str = DEFAULT_NAMESPACE) -> bool:
-        results = self._collection.get(
+        import asyncio
+        results = await asyncio.to_thread(
+            self._collection.get,
             where={"$and": [{"source_id": source_id}, {"namespace": namespace}]},
             limit=1,
         )
         return len(results["ids"]) > 0
 
     async def list_sources(self, namespace: str = DEFAULT_NAMESPACE) -> list[dict]:
-        results = self._collection.get(
+        import asyncio
+        results = await asyncio.to_thread(
+            self._collection.get,
             where={"namespace": namespace},
             include=["metadatas"],
         )
