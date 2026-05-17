@@ -99,6 +99,20 @@ class ToolCall:
 
 
 @dataclass
+class StructuredQuery:
+    sql: str
+    params: dict[str, Any] | None = None
+    table_schema: str = ""
+
+
+@dataclass
+class StructuredResult:
+    columns: list[str]
+    rows: list[list[Any]]
+    row_count: int
+
+
+@dataclass
 class Message:
     role: Literal["system", "user", "assistant", "tool"]
     content: str
