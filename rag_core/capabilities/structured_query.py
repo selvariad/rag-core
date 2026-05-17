@@ -19,6 +19,13 @@ class SQLiteQueryEngine:
         self._conn = sqlite3.connect(db_path, check_same_thread=False)
         self._conn.row_factory = sqlite3.Row
 
+    def get_tables(self) -> list[str]:
+        """Return list of table names in the database."""
+        cur = self._conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+        )
+        return [row[0] for row in cur.fetchall()]
+
     def setup_schema(self, ddl: str) -> None:
         """Execute DDL to set up tables (call once at init, not via execute_readonly)."""
         self._conn.executescript(ddl)
