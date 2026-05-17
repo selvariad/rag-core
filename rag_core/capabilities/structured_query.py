@@ -27,7 +27,7 @@ class SQLiteQueryEngine:
     def _is_readonly(self, sql: str) -> bool:
         cleaned = sql.strip().lstrip("(")
         first_word = re.split(r"\s+", cleaned, maxsplit=1)[0].upper()
-        return first_word in ("SELECT", "WITH", "EXPLAIN", "PRAGMA")
+        return first_word in ("SELECT", "WITH")
 
     async def execute_readonly(self, query: StructuredQuery) -> StructuredResult:
         if not self._is_readonly(query.sql):
