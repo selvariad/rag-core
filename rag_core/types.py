@@ -1,8 +1,16 @@
 # rag-core/rag_core/types.py
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Literal
 
 DEFAULT_NAMESPACE = "default"
+
+KnowledgeRoute = Literal[
+    "long_context",
+    "production_rag",
+    "agentic_retrieval",
+    "structured_query",
+    "deep_research",
+]
 
 
 @dataclass
@@ -72,6 +80,7 @@ class QueryResult:
     sources: list[RetrievedChunk]
     trace_id: str
     tokens: dict[str, int]
+    route: KnowledgeRoute = "production_rag"
 
 
 @dataclass
