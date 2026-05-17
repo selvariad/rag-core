@@ -110,6 +110,7 @@ class StructuredResult:
     columns: list[str]
     rows: list[list[Any]]
     row_count: int
+    limit_applied: bool = False  # True if system added default LIMIT
 
 
 @dataclass
